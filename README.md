@@ -19,7 +19,7 @@ To answer this, I examined changes in flight cancellations across multiple years
 
 ## Data Work
 
-I cleaned and organized flight data from 2019 to 2023 and analyzed more than 10,000 records to compare patterns across time. The workflow included identifying canceled flights, grouping observations by period, and summarizing trends in delays, cancellations, and traffic activity. :contentReference[oaicite:3]{index=3}
+I cleaned and organized flight data from 2019 to 2023 and analyzed more than 10,000 records to compare patterns across time. The workflow included identifying canceled flights, grouping observations by period, and summarizing trends in delays, cancellations, and traffic activity.
 
 ## Methods
 
