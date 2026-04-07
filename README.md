@@ -38,7 +38,7 @@ I cleaned and organized flight data from 2019 to 2023 and analyzed more than 10,
 
 ## Files
 
-- `final-project-instructions (3).html` – final project write-up
+- `pandemic_disruption.html` – final project write-up
 - `README.md` – project summary
 
 ## Takeaway
