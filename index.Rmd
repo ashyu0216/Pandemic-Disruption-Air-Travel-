@@ -1,0 +1,136 @@
+---
+title: "Pandamic Disruption in Air Travel"
+output: html_document
+author: "Ashley Yu" 
+date: "2024-03-25"
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+install.packages("sf")
+
+library(tidyverse)
+library(plotly)
+library(maps)
+library(usdata)
+library(sf)
+library(viridis)
+library("anyflights")
+
+```
+
+## 1. Research Question
+How does the number of cancellations (NAs in dep_time) in flights from JFK differ before, during, and after the COVID Pandemic?
+
+
+## 2. Rationale for the Research Question
+We chose this research question to understand how the pandemic affected air travel. This question is important because COVID-19 halted traveling between and within countries, causing detrimental effects on airline companies. By looking at the number of canceled flights before, during, and after the pandemic, we can analyze how the airline industry coped with the crisis and bounced back afterward. Additionally, we chose to observe flights from JFK specifically because it is the hub of air travel in New York, the center of both economy and tourism. The findings could help airlines, airports, and governments create plans for flight operations in future pandemics or emergencies.
+
+
+## 3. Data Selection
+
+```{r}
+states<-map_data("state")
+county<-map_data("county")
+airports<-read.csv("airports.csv")
+```
+
+
+```{r}
+# JFK2019march <- get_flights("JFK", year=2019, month=3) %>%
+#   filter(is.na(dep_time))
+# JFK2019nov <- get_flights("JFK", year=2019, month=11) %>%
+#   filter(is.na(dep_time))
+# JFK2020march <- get_flights("JFK", year=2020, month=3) %>%
+#   filter(is.na(dep_time))
+# JFK2020nov <- get_flights("JFK", year=2020, month=11) %>%
+#   filter(is.na(dep_time))
+# JFK2021march <- get_flights("JFK", year=2021, month=3) %>%
+#   filter(is.na(dep_time))
+# JFK2021nov <- get_flights("JFK", year=2021, month=11) %>%
+#   filter(is.na(dep_time))
+# JFK2022march <- get_flights("JFK", year=2022, month=3) %>%
+#   filter(is.na(dep_time))
+# JFK2022nov <- get_flights("JFK", year=2022, month=11) %>%
+#   filter(is.na(dep_time))
+# JFK2023march <- get_flights("JFK", year=2023, month=3) %>%
+#   filter(is.na(dep_time))
+# JFK2023nov <- get_flights("JFK", year=2023, month=11) %>%
+#   filter(is.na(dep_time))
+
+# combined_flights <- rbind(JFK2019march, JFK2019nov, JFK2020march, JFK2020nov, JFK2021march, JFK2021nov, JFK2022march, JFK2022nov, JFK2023march, JFK2023nov)
+# combined_flights <- left_join(combined_flights,airports,by=c("dest"="iata_code"))
+
+# combined_flights
+# write.csv(combined_flights, "/Users/katieno/Desktop/school/QTM150/combined_flights.csv")
+
+combined_flights <- read.csv("combined_flights.csv")
+
+```
+By comparing multiple years (2019, 2020, 2021, 2022, and 2023), we were able to capture variations and assess how the cancellation patterns evolved before, during, and after the pandemic. We used the data of March and November to observe what variation happened during the same year. The two months are significantly far apart, so it is reasonable to use their data. From the data, we learned that people’s lifestyle overall was significantly different on March and November of 2020 and 2021. This timeframe allows for understanding the changes in flight departures, considering factors like travel restrictions, public health measures, and shifts in people's behaviors and preferences.
+By also including information about US airports and their locations, it indicates the geographic distribution of flight activity, which can further help identify regional trends and disparities.
+
+
+
+## 4. Analytical Approach and Visual Findings
+
+line graph of the number of cancelled flights from JFK by year by carrier
+```{r}
+yearly_cancellations_by_carrier <- combined_flights %>%
+  group_by(year, carrier) %>%
+  summarize(total_cancellations = n()) %>%
+  ungroup()
+
+# Create a plotly line graph for total cancellations by year for each carrier
+p <- plot_ly(data = yearly_cancellations_by_carrier, x = ~year, y = ~total_cancellations, color = ~carrier, type = "scatter", mode = "lines", 
+             line = list(width = 2)) %>%
+  layout(title = "Total Cancellations by Year and Carrier at JFK",
+         xaxis = list(title = "Year"),
+         yaxis = list(title = "Total Cancellations"),
+         colorway = list("red", "blue", "green", "purple", "orange"))
+
+# Print the plot
+p
+
+```
+As visible from the graph, there is a massive spike in the number of cancelled flights originating from JFK between 2019 and 2020 for all aircraft carriers. We can infer that this increase was due to COVID-19 as we measured both March and November 2020 to understand the change over a year. However, we can see that as time increases, the number of cancellations goes down. This makes sense as restrictions got loosened, areas began to open up and fewer flights had to be canceled. One interesting part about this graph is that some of the lines appear discontinuous. This is due to the month selection and data not being available for certain carriers. 
+
+
+bar graph of cancelled flights by carrier for each year
+```{r}
+combined_flights %>% 
+  group_by(year) %>% 
+  count(carrier) %>% 
+  plot_ly(x=~carrier,y=~n,type='bar',color=~year) %>% 
+  layout(title = "Total Cancellations by Year and Carrier at JFK",
+         xaxis = list(title = "Carrier"),
+         yaxis = list(title = "Total Cancellations"))
+```
+
+
+
+
+
+map of cancelled flights originating from JFK by destination airport
+```{r}
+flights_by_dest <- combined_flights %>% 
+  group_by(dest,year) %>% 
+  reframe(count=n(),longitude,latitude,year)
+  
+flights_by_dest
+
+p <- ggplot(data=county, aes(x=long,y=lat))+
+  geom_polygon(aes(group=group),color="grey",fill=NA)+
+  geom_point(data=flights_by_dest,aes(x=as.numeric(longitude),y=as.numeric(latitude),size=count,frame=year))
+
+ggplotly(p)
+```
+Similarly to the other visualizations, the map also shows a significant increase in the number of cancellations in 2020. Additionally, we can see a lack of cancellations in the flights heading to the central regions of the country, most likely due to the conservative nature of many of these states. Another possible explanation could be that there are not as many big cities within the central states. This is reflected on the map as destinations with the largest marks on the map (or the number of cancellations) are Seattle, LA, San Fransisco, and Miami, all popular centers of tourism and business activities. With the restrictions of such activities, it is reasonable that the flights to these areas were canceled more.
+
+
+
+
+## 5. Implications and Conclusions
+Overall, the unexpected nature of the COVID-19 pandemic resulted in a significant spike in the number of canceled flights originating from JFK in 2020. During COVID-19 in 2021, the number of cancellations was surprisingly even less than the numbers before COVID-19 in 2019. This is most likely because the airline companies were aware of the situation and travel restrictions. In other words, there were significantly fewer numbers of flights planned to begin with, hence less numbers of flights to be canceled. As society returned to its normality in 2022 and 2023, the number of cancellations returned to a similar pattern as 2019. However, the numbers are slightly higher, perhaps due to new additional regulations put in place as the industry experienced and learned from the COVID-19 pandemic. These measures could include enhanced safety protocols, stricter travel restrictions, or changes in operational procedures aimed at mitigating the risk of future disruptions and ensuring passenger safety. Policymakers need to strike a balance between imposing necessary regulations to safeguard public health and minimizing disruptions to air travel and economic activity.
